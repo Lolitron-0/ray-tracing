@@ -19,7 +19,7 @@ set (SRCS
     Camera.cpp
     Snapshot.cpp
     Renderer.cpp
-    Material.cpp
+    Lambert.cpp
 )
 
 

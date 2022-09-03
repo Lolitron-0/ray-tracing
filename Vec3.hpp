@@ -3,6 +3,8 @@
 
 #include <cmath>
 #include <iostream>
+#include "Utils.hpp"
+
 
 class Vec3
 {
@@ -77,6 +79,19 @@ public:
        return x*x + y*y+ z*z;
     }
 
+    bool closeToZero(){
+        const auto eps = 1e-8;
+        return (fabs(x)<eps) && (fabs(y)<eps) && (fabs(z)<eps);
+    }
+
+    inline static Vec3 random(){
+        return Vec3(randomFloat(), randomFloat(), randomFloat());
+    }
+
+    inline static Vec3 random(float min, float max){
+        return Vec3(randomFloat(min,max), randomFloat(min, max), randomFloat(min, max));
+    }
+
 public:
     float x;
     float y;
@@ -84,6 +99,7 @@ public:
 };
 
 using Color = Vec3;
+
 
 
 
@@ -142,6 +158,18 @@ inline Vec3 cross(const Vec3& v, const Vec3& u)
 inline Vec3 unitVector(const Vec3& v)
 {
     return v/v.length();
+}
+
+inline Vec3 randomInUnitSphere(){
+    while (1) {
+        auto p = Vec3::random(-1,1);
+        if(p.lengthSquared() >= 1) continue;
+        return p;
+    }
+}
+
+inline Vec3 randomUnit(){
+    return unitVector(randomInUnitSphere());
 }
 
 #endif // VEC3_HPP

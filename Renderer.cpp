@@ -3,6 +3,10 @@
 #include "Colors.hpp"
 #include "Utils.hpp"
 #include "Timer.hpp"
+#include "Material.hpp"
+#include "Scene.hpp"
+#include "Camera.hpp"
+#include "Hit.hpp"
 #include <omp.h>
 
 Renderer::Renderer()
@@ -11,9 +15,16 @@ Renderer::Renderer()
 
 Color Renderer::getRayColor(const Ray &r, const Scene &scene, int currentDepth) const
 {
+    if(currentDepth > mMaxDepth)
+        return colors::black;
+
     Hit rec;
-    if(scene.hit(r, 0.001, infinity, rec)){
-        return 0.5 * (rec.unitNormal + colors::white);
+    if(scene.hit(r, 0.01, infinity, rec)){
+        Ray scattered;
+        Color attenuation;
+        if(rec.material->scatter(r, rec, attenuation, scattered))
+            return attenuation * getRayColor(scattered, scene, currentDepth+1);
+        return colors::black;
     }
 
     Vec3 unitDirection = unitVector(r.direction);

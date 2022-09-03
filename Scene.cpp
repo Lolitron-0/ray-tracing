@@ -1,4 +1,6 @@
 #include "Scene.hpp"
+#include "Hit.hpp"
+
 
 Scene::Scene()
 {

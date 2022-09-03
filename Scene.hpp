@@ -4,7 +4,7 @@
 #include <memory>
 #include "Hittable.hpp"
 
-
+struct Hit;
 
 class Scene : public Hittable
 {

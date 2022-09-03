@@ -19,5 +19,7 @@
 #include "Camera.hpp"
 #include "Renderer.hpp"
 #include "Timer.hpp"
+#include "Lambert.hpp"
+
 
 #endif // ALLHEADER_HPP

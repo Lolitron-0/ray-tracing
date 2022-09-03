@@ -13,10 +13,11 @@ int main()
     Camera camera(Snapshot(imageWidth, imageHeight, "image.ppm"),aspectRatio);
 
     Scene scene;
-    scene.addObject(std::make_shared<Sphere>(Vec3(0,-100.5,-1),100));
-    scene.addObject(std::make_shared<Sphere>(Vec3(0,0,-1),0.5));
+    scene.addObject(std::make_shared<Sphere>(Vec3(0,-100.5,-1),100,std::make_shared<Lambert>(Color(.5,.8,.5))));
+    scene.addObject(std::make_shared<Sphere>(Vec3(0,0,-1),0.5,std::make_shared<Lambert>(Color(.8,.5,.5))));
 
     Renderer renderer;
+    //renderer.setAntialiasingStrength(0);
 
     renderer.render(scene, camera);
 

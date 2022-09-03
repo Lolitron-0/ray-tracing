@@ -1,8 +1,10 @@
 #ifndef RENDERER_HPP
 #define RENDERER_HPP
-#include "Snapshot.hpp"
-#include "Camera.hpp"
-#include "Scene.hpp"
+#include "Ray.hpp"
+
+
+class Scene;
+class Camera;
 
 class Renderer
 {

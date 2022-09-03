@@ -34,7 +34,17 @@ void Snapshot::writeToImage()
     file << "P3\n" << mWidth <<' '<< mHeight<<"\n255\n";
     for(int i=mHeight-1;i>0;i--){
         for(int j=0;j<mWidth;j++){
-            file<<mPixels[i][j] * 255.999<<std::endl;
+            auto r = mPixels[i][j].x;
+            auto g = mPixels[i][j].y;
+            auto b = mPixels[i][j].z;
+
+            r = std::sqrt(r);
+            g = std::sqrt(g);
+            b = std::sqrt(b);
+
+            file<<static_cast<int>(256*clamp(r, 0.0, 0.999))<<' '
+                <<static_cast<int>(256*clamp(g, 0.0, 0.999))<<' '
+                <<static_cast<int>(256*clamp(b, 0.0, 0.999))<<' '<<std::endl;
         }
     }
     file.close();

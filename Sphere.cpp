@@ -1,7 +1,9 @@
 #include "Sphere.hpp"
+#include "Hit.hpp"
 
-Sphere::Sphere(Vec3 center, float radius)
-    :mCenter(center), mRadius(radius)
+
+Sphere::Sphere(Vec3 center, float radius, std::shared_ptr<Material> m)
+    :Hittable(m),mCenter(center), mRadius(radius)
 {
 }
 
@@ -28,6 +30,7 @@ bool Sphere::hit(const Ray &r, float tMin, float tMax, Hit &rec) const
     rec.t = t;
     rec.p = r.at(rec.t);
     rec.setFaceNormal(r, rec.p - mCenter);
+    rec.material = mMaterial;
 
     return true;
 }
