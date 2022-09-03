@@ -12,12 +12,20 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 
-
-
 set (SRCS
     main.cpp
+    Sphere.cpp
+    Scene.cpp
+    Camera.cpp
+    Snapshot.cpp
+    Renderer.cpp
+    Material.cpp
 )
 
 
 add_executable(${CMAKE_PROJECT_NAME} ${SRCS})
 
+find_package(OpenMP)
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(${CMAKE_PROJECT_NAME} PUBLIC OpenMP::OpenMP_CXX)
+endif()

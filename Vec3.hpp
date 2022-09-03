@@ -48,6 +48,12 @@ public:
         return *this;
     }
 
+    //make a unit vector out of this
+    void normalize()
+    {
+        (*this)*=(1/length());
+    }
+
     float dot(const Vec3& u) const
     {
         return x*u.x+
@@ -89,8 +95,16 @@ inline Vec3 operator+(const Vec3& u, const Vec3& v){
     return Vec3(u.x+v.x, u.y+v.y, u.z+v.z);
 }
 
+inline Vec3 operator+(const Vec3& v, float t){
+    return Vec3(v.x+t, v.y+t, v.z+t);
+}
+
 inline Vec3 operator-(const Vec3& u, const Vec3& v){
     return Vec3(u.x-v.x, u.y-v.y, u.z-v.z);
+}
+
+inline Vec3 operator-(const Vec3& v, float t){
+    return Vec3(v.x-t, v.y-t, v.z-t);
 }
 
 inline Vec3 operator*(const Vec3& u, const Vec3& v){
@@ -109,6 +123,20 @@ inline Vec3 operator/(const Vec3& v, const float& t){
     return Vec3(v.x/t, v.y/t, v.z/t);
 }
 
+inline float dot(const Vec3& v, const Vec3& u)
+{
+    return v.x*u.x+
+            v.y*u.y+
+            v.z*u.z;
+}
+
+inline Vec3 cross(const Vec3& v, const Vec3& u)
+{
+    return Vec3(v.y*u.z - v.z*u.y,
+                v.z*u.x - v.x*u.z,
+                v.x*u.y - v.y*u.x
+                );
+}
 
 //normalizes vector to 0..1 with same direction
 inline Vec3 unitVector(const Vec3& v)
