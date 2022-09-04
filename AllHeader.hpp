@@ -18,8 +18,10 @@
 #include "Utils.hpp"
 #include "Camera.hpp"
 #include "Renderer.hpp"
+#include "RawTexture.hpp"
 #include "Timer.hpp"
 #include "Lambert.hpp"
+#include "Metal.hpp"
 
 
 #endif // ALLHEADER_HPP

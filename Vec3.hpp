@@ -14,6 +14,36 @@ public:
         :x(x), y(y), z(z)
     {}
 
+
+    Vec3 operator+(const Vec3& v) const {
+        return Vec3(x+v.x, y+v.y, z+v.z);
+    }
+
+    Vec3 operator+(float t) const {
+        return Vec3(x+t, y+t, z+t);
+    }
+
+    Vec3 operator-(const Vec3& v) const {
+        return Vec3(x-v.x, y-v.y, z-v.z);
+    }
+
+    Vec3 operator-(float t) const {
+        return Vec3(x-t, y-t, z-t);
+    }
+
+    Vec3 operator*(const Vec3& v) const {
+        return Vec3(x*v.x, y*v.y, z*v.z);
+    }
+
+    Vec3 operator*(float t) const {
+        return Vec3(x*t, y*t, z*t);
+    }
+
+    Vec3 operator/(float t) const {
+        return Vec3(x/t, y/t, z/t);
+    }
+
+
     Vec3 operator-() const { return Vec3(-x, -y, -z); }
 
     Vec3& operator+=(const Vec3& v) {
@@ -30,14 +60,14 @@ public:
         return *this;
     }
 
-    Vec3& operator*=(const float& t) {
+    Vec3& operator*=(float t) {
         x *= t;
         y *= t;
         z *= t;
         return *this;
     }
 
-    Vec3& operator/=(const float& t){
+    Vec3& operator/=(float t){
         return *this *= 1/t;
     }
 
@@ -69,6 +99,10 @@ public:
                     z*u.x - x*u.z,
                     x*u.y - y*u.x
                     );
+    }
+
+    Vec3 reflect(const Vec3& normal) const{
+        return *this - normal * dot(normal) * 2;
     }
 
     float length() const {
@@ -105,38 +139,6 @@ using Color = Vec3;
 
 inline std::ostream& operator<<(std::ostream& out, const Vec3& v){
     return out<<static_cast<int>(v.x)<<' '<<static_cast<int>(v.y)<<' '<<static_cast<int>(v.z);
-}
-
-inline Vec3 operator+(const Vec3& u, const Vec3& v){
-    return Vec3(u.x+v.x, u.y+v.y, u.z+v.z);
-}
-
-inline Vec3 operator+(const Vec3& v, float t){
-    return Vec3(v.x+t, v.y+t, v.z+t);
-}
-
-inline Vec3 operator-(const Vec3& u, const Vec3& v){
-    return Vec3(u.x-v.x, u.y-v.y, u.z-v.z);
-}
-
-inline Vec3 operator-(const Vec3& v, float t){
-    return Vec3(v.x-t, v.y-t, v.z-t);
-}
-
-inline Vec3 operator*(const Vec3& u, const Vec3& v){
-    return Vec3(u.x*v.x, u.y*v.y, u.z*v.z);
-}
-
-inline Vec3 operator*(const Vec3& v, const float& t){
-    return Vec3(v.x*t, v.y*t, v.z*t);
-}
-
-inline Vec3 operator*(const float& t, const Vec3& v){
-    return Vec3(v.x*t, v.y*t, v.z*t);
-}
-
-inline Vec3 operator/(const Vec3& v, const float& t){
-    return Vec3(v.x/t, v.y/t, v.z/t);
 }
 
 inline float dot(const Vec3& v, const Vec3& u)

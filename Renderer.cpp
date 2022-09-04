@@ -10,7 +10,9 @@
 #include <omp.h>
 
 Renderer::Renderer()
-    :mSamplesPerPixel(100), mMaxDepth(50)
+    :mSamplesPerPixel(100),
+     mMaxDepth(50),
+     mNumThreads(4)
 {}
 
 Color Renderer::getRayColor(const Ray &r, const Scene &scene, int currentDepth) const
@@ -29,18 +31,18 @@ Color Renderer::getRayColor(const Ray &r, const Scene &scene, int currentDepth) 
 
     Vec3 unitDirection = unitVector(r.direction);
     rec.t = 0.5 * (unitDirection.y+1);
-    return (1.-rec.t)*colors::white + rec.t*colors::lightBlue;
+    return colors::white*(1.-rec.t) + colors::lightBlue*rec.t;
 }
 
-void Renderer::render(const Scene &scene, Camera &camera) const
+void Renderer::render(const Scene &scene, Camera &camera)
 {
-    omp_set_num_threads(1);
+    omp_set_num_threads(mNumThreads);
 
+    mLinesRemaining = camera.snapshot.getHeight();
     Timer timer;
 #pragma omp parallel for shared(camera)
     for(int j = camera.snapshot.getHeight()-1; j>=0;j--)
     {
-        std::cout<<"Lines remaining: "<<j<<std::endl;
         for(int i=0;i<camera.snapshot.getWidth();i++)
         {
             Color pixelColor = colors::black;
@@ -53,19 +55,41 @@ void Renderer::render(const Scene &scene, Camera &camera) const
             }
             camera.snapshot.putPixel(i,j,pixelColor/mSamplesPerPixel);
         }
+        mLinesRemaining--;
     }
-    camera.snapshot.writeToImage();
+    //camera.snapshot.writeToImage();
     std::cout<<"Done in "<<timer.elapsedMs()/1000.<<" sec!"<<std::endl;
 }
 
 void Renderer::setAntialiasingStrength(int strength)
 {
-    rtAssert(strength>=0, "Antialiasing must be >=0");
-    mSamplesPerPixel = strength+1; //+1 so 0 is i sample
+    rtAssert(strength>=1, "Antialiasing must be >=0");
+    mSamplesPerPixel = strength;
+}
+
+int Renderer::getAntialiasingStrength() const
+{
+    return mSamplesPerPixel;
 }
 
 void Renderer::setMaxShadowDepth(int depth)
 {
     rtAssert(depth>=1,"Shadow depth must be >=1");
     mMaxDepth = depth;
+}
+
+void Renderer::setNumThreads(int threads)
+{
+    rtAssert(threads>0, "Number of threads must be positive");
+    mNumThreads = threads;
+}
+
+int Renderer::getLinesRemaining() const
+{
+    return mLinesRemaining;
+}
+
+int Renderer::getNumThreads() const
+{
+    return mNumThreads;
 }

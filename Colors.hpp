@@ -5,6 +5,7 @@
 namespace colors {
     const Color white(1,1,1);
     const Color black(0,0,0);
+    const Color grey(.5, .5, .5);
     const Color red(1,0,0);
     const Color green(0,1,0);
     const Color blue(0,0,1);

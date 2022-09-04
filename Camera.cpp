@@ -1,7 +1,7 @@
 #include "Camera.hpp"
 
-Camera::Camera(Snapshot snapshot, float aspectRatio)
-    :snapshot(snapshot)
+Camera::Camera(int width, float aspectRatio)
+    :snapshot(width, width/aspectRatio)
 {
     auto viewportHeight = 2.;
     auto viewportWidth = viewportHeight * aspectRatio;
@@ -17,4 +17,5 @@ Ray Camera::getRay(float u, float v) const
 {
     return Ray(mOrigin, mLowerLeft + mHorizontal*u + mVertical*v - mOrigin);
 }
+
 

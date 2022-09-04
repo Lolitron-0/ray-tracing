@@ -11,7 +11,7 @@ public:
         :origin(origin), direction(direction){}
 
     Vec3 at(float t) const {
-        return origin + t*direction;
+        return origin + direction * t;
     }
 
 public:

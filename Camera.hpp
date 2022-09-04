@@ -1,5 +1,6 @@
 #ifndef CAMERA_HPP
 #define CAMERA_HPP
+#include <memory>
 #include "Vec3.hpp"
 #include "Ray.hpp"
 #include "Snapshot.hpp"
@@ -7,7 +8,7 @@
 class Camera
 {
 public:
-    Camera(Snapshot snapshot, float aspectRatio);
+    Camera(int width, float aspectRatio);
 
     Ray getRay(float u, float v) const;
 

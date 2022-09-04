@@ -8,7 +8,7 @@
 class Snapshot
 {
 public:
-    Snapshot(int width, int height, std::string path);
+    Snapshot(int width, int height);
     Snapshot(const Snapshot&);
     ~Snapshot();
 
@@ -20,9 +20,10 @@ public:
     int getWidth() const;
     int getHeight() const;
 
-private:
+public:
     int mWidth;
     int mHeight;
+    bool mWritten{false};
     std::string mPathToFile;
     Color** mPixels;
 };

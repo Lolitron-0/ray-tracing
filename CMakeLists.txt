@@ -10,7 +10,17 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
+set(CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
+set(CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR})
+
+
+include_directories(
+    Materials/
+    )
 
 set (SRCS
     main.cpp
@@ -19,13 +29,36 @@ set (SRCS
     Camera.cpp
     Snapshot.cpp
     Renderer.cpp
-    Lambert.cpp
+    RawTexture.cpp
+    Materials/Lambert.cpp
+    Materials/Metal.cpp
+
+    imgui/imgui_impl_glfw.cpp
+    imgui/imgui_impl_opengl3.cpp
+    imgui/imgui.cpp
+    imgui/imgui_draw.cpp
+    imgui/imgui_tables.cpp
+    imgui/imgui_widgets.cpp
 )
+
+
 
 
 add_executable(${CMAKE_PROJECT_NAME} ${SRCS})
 
+
+find_package(glfw3 CONFIG REQUIRED)
+target_link_libraries(${CMAKE_PROJECT_NAME} glfw)
+
+find_package(OpenGL REQUIRED)
+target_link_libraries(${CMAKE_PROJECT_NAME} OpenGL::GL)
+
+#find_package(imgui CONFIG)
+#target_link_libraries(${CMAKE_PROJECT_NAME} imgui::imgui)
+
 find_package(OpenMP)
-if(OpenMP_CXX_FOUND)
-    target_link_libraries(${CMAKE_PROJECT_NAME} PUBLIC OpenMP::OpenMP_CXX)
-endif()
+target_link_libraries(${CMAKE_PROJECT_NAME} OpenMP::OpenMP_CXX)
+
+
+
+
