@@ -32,6 +32,16 @@ void Snapshot::putPixel(int x, int y, Color color)
                );
 }
 
+Vec3 Snapshot::getPixel(int i, int j)
+{
+    return mPixels[i][j];
+}
+
+Vec3 **Snapshot::getPixelData()
+{
+    return mPixels;
+}
+
 void Snapshot::writeToImage()
 {
     std::ofstream file;

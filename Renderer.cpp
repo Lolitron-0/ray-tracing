@@ -10,7 +10,7 @@
 #include <omp.h>
 
 Renderer::Renderer()
-    :mSamplesPerPixel(100),
+    :mTargetSamplesPerPixel(100),
      mMaxDepth(50),
      mNumThreads(4)
 {}
@@ -38,38 +38,61 @@ void Renderer::render(const Scene &scene, Camera &camera)
 {
     omp_set_num_threads(mNumThreads);
 
-    mLinesRemaining = camera.snapshot.getHeight();
-    Timer timer;
-#pragma omp parallel for shared(camera)
-    for(int j = camera.snapshot.getHeight()-1; j>=0;j--)
+    mShouldInterrupt = false;
+    for(mCurrentSamplesPerPixel = mDynamicAntialiasing?1:mTargetSamplesPerPixel;
+        /*and target condition below*/!mShouldInterrupt;
+        mCurrentSamplesPerPixel = clamp(mCurrentSamplesPerPixel+std::ceil(mTargetSamplesPerPixel/3.), 0, mTargetSamplesPerPixel))//dynamic render loop
     {
-        for(int i=0;i<camera.snapshot.getWidth();i++)
+        mLinesRemaining = camera.snapshot.getHeight();
+        Timer timer;
+#pragma omp parallel for shared(camera)
+        for(int j = camera.snapshot.getHeight()-1; j>=0;j--)
         {
-            Color pixelColor = colors::black;
-            for(int k=0;k<mSamplesPerPixel;k++)
+            for(int i=0;i<camera.snapshot.getWidth();i++)
             {
-                auto u = (i+randomFloat())/(camera.snapshot.getWidth()-1);
-                auto v = (j+randomFloat())/(camera.snapshot.getHeight()-1);
-                Ray r = camera.getRay(u, v);
-                pixelColor += getRayColor(r, scene, 0);
+                Color pixelColor = colors::black;
+                for(int k=0;k< mCurrentSamplesPerPixel;k++) //antialiasing loop
+                {
+                    auto u = (i+randomFloat())/(camera.snapshot.getWidth()-1);
+                    auto v = (j+randomFloat())/(camera.snapshot.getHeight()-1);
+                    Ray r = camera.getRay(u, v);
+                    pixelColor += getRayColor(r, scene, 0);
+                }
+                camera.snapshot.putPixel(i,j,pixelColor/ mCurrentSamplesPerPixel);
             }
-            camera.snapshot.putPixel(i,j,pixelColor/mSamplesPerPixel);
+
+            if(mShouldInterrupt){
+#pragma omp cancel for
+            }
+            mLinesRemaining--;
         }
-        mLinesRemaining--;
+
+        mLinesRemaining = 0; //doing it implicitly so cancelled threads don't go below zero
+        std::cout<<"Iteration done in "<<timer.elapsedMs()/1000.<<" sec!"<<std::endl;
+
+        if(mCurrentSamplesPerPixel>=mTargetSamplesPerPixel) break; //here it is
     }
-    //camera.snapshot.writeToImage();
-    std::cout<<"Done in "<<timer.elapsedMs()/1000.<<" sec!"<<std::endl;
+}
+
+void Renderer::askInterrupt()
+{
+    mShouldInterrupt = true;
 }
 
 void Renderer::setAntialiasingStrength(int strength)
 {
     rtAssert(strength>=1, "Antialiasing must be >=0");
-    mSamplesPerPixel = strength;
+    mTargetSamplesPerPixel = strength;
 }
 
-int Renderer::getAntialiasingStrength() const
+int Renderer::getCurrentAntialiasingStrength() const
 {
-    return mSamplesPerPixel;
+    return mCurrentSamplesPerPixel;
+}
+
+int Renderer::getTargetAntialiasingStrength() const
+{
+    return mTargetSamplesPerPixel;
 }
 
 void Renderer::setMaxShadowDepth(int depth)
@@ -92,4 +115,14 @@ int Renderer::getLinesRemaining() const
 int Renderer::getNumThreads() const
 {
     return mNumThreads;
+}
+
+void Renderer::setDynamicAntialiasing(bool val)
+{
+    mDynamicAntialiasing = val;
+}
+
+bool Renderer::getDynamicAntialiasing() const
+{
+    return mDynamicAntialiasing;
 }

@@ -13,14 +13,15 @@ public:
     ~Snapshot();
 
     void putPixel(int x, int y, Color color);
+    Vec3 getPixel(int i, int j);
+    Vec3** getPixelData();
 
     void writeToImage();
-    void gammaCorrect();
 
     int getWidth() const;
     int getHeight() const;
 
-public:
+private:
     int mWidth;
     int mHeight;
     bool mWritten{false};

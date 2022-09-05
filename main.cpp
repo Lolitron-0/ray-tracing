@@ -2,6 +2,7 @@
 #include "AllHeader.hpp"
 #include <thread>
 #include <GLFW/glfw3.h>
+#include <stdlib.h>
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_glfw.h"
 #include "imgui/imgui_impl_opengl3.h"
@@ -54,6 +55,9 @@ Scene generateScene(int numObjects)
 
 int main()
 {
+    srand(time(0));
+
+    //Render
     const auto aspectRatio = 16./9.;
     const int imageWidth=1000;
     const int imageHeight=static_cast<int>(imageWidth/aspectRatio);
@@ -72,23 +76,16 @@ int main()
 
     Renderer renderer;
     renderer.setAntialiasingStrength(50);
+    renderer.setDynamicAntialiasing(true);
+    renderer.setNumThreads(8);
 
-    std::thread th([&renderer, scene, &camera](){
-        int i=1;
-        renderer.setAntialiasingStrength(i);
-        renderer.render(scene, camera);
-
-        i = 10;
-        renderer.setAntialiasingStrength(i);
-        renderer.render(scene, camera);
-
-        i = 30;
-        renderer.setAntialiasingStrength(i);
+    std::thread renderThread([&renderer, scene, &camera](){
         renderer.render(scene, camera);
     });
 
+    //GUI
     RawTexture texture(camera.snapshot.getWidth(), camera.snapshot.getHeight());
-    texture.regenerateTexture(camera.snapshot.mPixels, imageWidth, imageHeight);
+    bool showPreview = true;
 
     glOrtho(0, imageWidth, imageHeight, 0, -1, 1);
     while (!glfwWindowShouldClose(window))
@@ -99,10 +96,24 @@ int main()
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        ImGui::Begin("aRolf");
-        ImGui::ProgressBar(1-renderer.getLinesRemaining()/(float)imageHeight);
-        ImGui::Text("Rendering with %d samples per pixel", renderer.getAntialiasingStrength());
-        ImGui::Text("Using %d threads", renderer.getNumThreads());
+        //ImGui::ShowDemoWindow();
+
+        ImGui::Begin("Render");
+        if(ImGui::CollapsingHeader("Progress")){
+            ImGui::ProgressBar(1-renderer.getLinesRemaining()/(float)imageHeight);
+
+            ImGui::Text("Using %d threads", renderer.getNumThreads());
+            if(renderer.getLinesRemaining()>0)
+                ImGui::Text("Rendering with %d samples per pixel", renderer.getCurrentAntialiasingStrength());
+            else
+                ImGui::Text("Done!");
+
+            if(ImGui::Button("Interrupt"))
+                renderer.askInterrupt();
+        }
+        if(ImGui::CollapsingHeader("Options")){
+            ImGui::Checkbox("Show preview", &showPreview);
+        }
         ImGui::End();
 
         ImGui::Render();
@@ -110,22 +121,26 @@ int main()
         glClearColor(.5,.5,.5,1);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        texture.regenerateTexture(camera.snapshot.mPixels, imageWidth, imageHeight);
-        glEnable(GL_TEXTURE_2D);
-        glBindTexture(GL_TEXTURE_2D, texture.getHandle());
-        glBegin(GL_QUADS);
-            glTexCoord2d(0, 1); glVertex2i(0,0);
-            glTexCoord2d(1, 1); glVertex2i(imageWidth,0);
-            glTexCoord2d(1, 0); glVertex2i(imageWidth,imageHeight);
-            glTexCoord2d(0, 0); glVertex2i(0,imageHeight);
-        glEnd();
-        glDisable(GL_TEXTURE_2D);
-        glBindTexture(GL_TEXTURE_2D, 0);
-
+        if(showPreview){
+            if(renderer.getLinesRemaining()!=0)
+                texture.regenerateTexture(camera.snapshot.getPixelData(), imageWidth, imageHeight);
+            glEnable(GL_TEXTURE_2D);
+            glBindTexture(GL_TEXTURE_2D, texture.getHandle());
+            glBegin(GL_QUADS);
+                glTexCoord2d(0, 1); glVertex2i(0,0);
+                glTexCoord2d(1, 1); glVertex2i(imageWidth,0);
+                glTexCoord2d(1, 0); glVertex2i(imageWidth,imageHeight);
+                glTexCoord2d(0, 0); glVertex2i(0,imageHeight);
+            glEnd();
+            glDisable(GL_TEXTURE_2D);
+            glBindTexture(GL_TEXTURE_2D, 0);
+        }
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         glfwSwapBuffers(window);
     }
+    renderer.askInterrupt();
+    //renderThread.join();
 
     glfwTerminate();
 }
