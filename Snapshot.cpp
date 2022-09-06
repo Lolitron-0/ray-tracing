@@ -23,6 +23,15 @@ Snapshot::~Snapshot()
    mPixels = nullptr;
 }
 
+void Snapshot::clear(Color clearColor)
+{
+    for(int i=mHeight-1;i>=0;i--){
+        for(int j=0;j<mWidth;j++){
+            mPixels[i][j] = clearColor;
+        }
+    }
+}
+
 void Snapshot::putPixel(int x, int y, Color color)
 {
    mPixels[y][x] = Color(

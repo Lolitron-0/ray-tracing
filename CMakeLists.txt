@@ -30,8 +30,10 @@ set (SRCS
     Snapshot.cpp
     Renderer.cpp
     RawTexture.cpp
+
     Materials/Lambert.cpp
     Materials/Metal.cpp
+    Materials/Glass.cpp
 
     imgui/imgui_impl_glfw.cpp
     imgui/imgui_impl_opengl3.cpp

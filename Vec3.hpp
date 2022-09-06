@@ -105,6 +105,13 @@ public:
         return *this - normal * dot(normal) * 2;
     }
 
+    Vec3 refract(const Vec3& normal, float etaRatio) const {
+        auto cosTheta = fmin((-*this).dot(normal), 1.0);
+        Vec3 rOutPerp = ((*this)+normal*cosTheta) * etaRatio;
+        Vec3 rOutPar = normal * -std::sqrt(fabs(1-rOutPerp.lengthSquared()));
+        return rOutPerp + rOutPar;
+    }
+
     float length() const {
         return std::sqrt(lengthSquared());
     }

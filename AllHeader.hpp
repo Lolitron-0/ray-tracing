@@ -22,6 +22,7 @@
 #include "Timer.hpp"
 #include "Lambert.hpp"
 #include "Metal.hpp"
+#include "Glass.hpp"
 
 
 #endif // ALLHEADER_HPP

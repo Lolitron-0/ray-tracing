@@ -57,11 +57,20 @@ int main()
 {
     srand(time(0));
 
-    //Render
+
+    //Gui values
+    bool guiShowPreview = true;
+    bool guiDynamicAntialiasing = true;
+    int guiTargetAntialiasing = 50;
+    int guiNumThreads = 4;
+
+
+    //Global values
     const auto aspectRatio = 16./9.;
     const int imageWidth=1000;
     const int imageHeight=static_cast<int>(imageWidth/aspectRatio);
 
+    //Render
     GLFWwindow* window = initGui(imageWidth, imageHeight);
 
     Camera camera(imageWidth, aspectRatio);
@@ -70,22 +79,21 @@ int main()
     //scene.addObject(std::make_shared<Sphere>(Vec3(-1,0,-1),0.5,std::make_shared<Lambert>(Color::random()*Color::random())));
     //scene.addObject(std::make_shared<Sphere>(Vec3(1,0,-1),0.5,std::make_shared<Lambert>(Color::random()*Color::random())));
     scene.addObject(std::make_shared<Sphere>(Vec3(-0.5,0,-1),0.5,
-                                             std::make_shared<Metal>(Color::random()*Color::random(),0.5)));
+                                             std::make_shared<Metal>(Color::random()*Color::random(),1.0)));
     scene.addObject(std::make_shared<Sphere>(Vec3(0.5,0,-1),0.5,
-                                             std::make_shared<Metal>(Color::random()*Color::random(), 0.1)));
+                                             std::make_shared<Glass>(1.3)));
 
     Renderer renderer;
-    renderer.setAntialiasingStrength(50);
-    renderer.setDynamicAntialiasing(true);
-    renderer.setNumThreads(8);
+    renderer.setAntialiasingStrength(guiTargetAntialiasing);
+    renderer.setDynamicAntialiasing(guiDynamicAntialiasing);
+    renderer.setNumThreads(guiNumThreads);
 
     std::thread renderThread([&renderer, scene, &camera](){
         renderer.render(scene, camera);
     });
 
-    //GUI
+    //Preview
     RawTexture texture(camera.snapshot.getWidth(), camera.snapshot.getHeight());
-    bool showPreview = true;
 
     glOrtho(0, imageWidth, imageHeight, 0, -1, 1);
     while (!glfwWindowShouldClose(window))
@@ -98,22 +106,44 @@ int main()
 
         //ImGui::ShowDemoWindow();
 
-        ImGui::Begin("Render");
-        if(ImGui::CollapsingHeader("Progress")){
-            ImGui::ProgressBar(1-renderer.getLinesRemaining()/(float)imageHeight);
+        const ImGuiViewport* viewport = ImGui::GetMainViewport();
+        ImGui::SetNextWindowPos(viewport->WorkPos);
+        //ImGui::SetNextWindowSize(ImVec2(viewport->WorkSize.x/3, ImGui));
 
+        ImGui::Begin("Render", NULL, ImGuiWindowFlags_AlwaysAutoResize);
+            ImGui::ProgressBar(1-renderer.getLinesRemaining()/(float)imageHeight);
             ImGui::Text("Using %d threads", renderer.getNumThreads());
             if(renderer.getLinesRemaining()>0)
                 ImGui::Text("Rendering with %d samples per pixel", renderer.getCurrentAntialiasingStrength());
             else
                 ImGui::Text("Done!");
 
+            ImGui::NewLine();
+            ImGui::Separator();
+            ImGui::NewLine();
+
             if(ImGui::Button("Interrupt"))
                 renderer.askInterrupt();
-        }
-        if(ImGui::CollapsingHeader("Options")){
-            ImGui::Checkbox("Show preview", &showPreview);
-        }
+            ImGui::SameLine();
+            if(ImGui::Button("Clear")){
+                camera.snapshot.clear();
+                texture.regenerateTexture(camera.snapshot.getPixelData(), imageWidth, imageHeight);
+            }
+            ImGui::SameLine();
+            if(ImGui::Button("Render")){
+                renderer.askInterrupt();
+                renderThread.join();
+                renderThread = std::thread([&renderer, scene, &camera](){
+                    renderer.render(scene, camera);
+                });
+            }
+            ImGui::Checkbox("Show preview", &guiShowPreview);
+            if(ImGui::Checkbox("Dynamic render", &guiDynamicAntialiasing))
+                renderer.setDynamicAntialiasing(guiDynamicAntialiasing);
+            if(ImGui::SliderInt("Num threads", &guiNumThreads, 1, 20))
+                renderer.setNumThreads(guiNumThreads);
+            if(ImGui::SliderInt("Target antialiasing", &guiTargetAntialiasing, 1, 5000))
+                renderer.setAntialiasingStrength(guiTargetAntialiasing);
         ImGui::End();
 
         ImGui::Render();
@@ -121,7 +151,7 @@ int main()
         glClearColor(.5,.5,.5,1);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        if(showPreview){
+        if(guiShowPreview){
             if(renderer.getLinesRemaining()!=0)
                 texture.regenerateTexture(camera.snapshot.getPixelData(), imageWidth, imageHeight);
             glEnable(GL_TEXTURE_2D);

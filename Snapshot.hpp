@@ -1,6 +1,7 @@
 #ifndef SNAPSHOT_H
 #define SNAPSHOT_H
 #include "Vec3.hpp"
+#include "Colors.hpp"
 #include <iostream>
 #include <fstream>
 
@@ -12,6 +13,7 @@ public:
     Snapshot(const Snapshot&);
     ~Snapshot();
 
+    void clear(Color clearColor = colors::black);
     void putPixel(int x, int y, Color color);
     Vec3 getPixel(int i, int j);
     Vec3** getPixelData();
