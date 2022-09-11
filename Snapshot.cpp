@@ -16,11 +16,14 @@ Snapshot::Snapshot(const Snapshot &other)
 
 Snapshot::~Snapshot()
 {
-   if(!mWritten) writeToImage();
-   for(int i=0;i<mHeight;i++)
-       delete[] mPixels[i];
-   delete[] mPixels;
-   mPixels = nullptr;
+    if(!mWritten){
+        mPathToFile = "autosave_"+mPathToFile;
+        writeToImage();
+    }
+    for(int i=0;i<mHeight;i++)
+        delete[] mPixels[i];
+    delete[] mPixels;
+    mPixels = nullptr;
 }
 
 void Snapshot::clear(Color clearColor)

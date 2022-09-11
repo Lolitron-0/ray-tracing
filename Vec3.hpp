@@ -13,6 +13,9 @@ public:
     Vec3(float x, float y, float z)
         :x(x), y(y), z(z)
     {}
+    Vec3(float* coords)
+        :x(coords[0]), y(coords[1]), z(coords[2])
+    {}
 
 
     Vec3 operator+(const Vec3& v) const {
@@ -181,6 +184,13 @@ inline Vec3 randomUnit(){
     return unitVector(randomInUnitSphere());
 }
 
+inline Vec3 randomInUnitDisk() {
+    while (true) {
+        auto p = Vec3(randomFloat(-1,1), randomFloat(-1,1), 0);
+        if (p.lengthSquared() >= 1) continue;
+        return p;
+    }
+}
 #endif // VEC3_HPP
 
 

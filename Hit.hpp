@@ -15,11 +15,12 @@ struct Hit
     std::shared_ptr<Material> material;
 
     //sets the proper unit normal and frontFace values
-    //outwardNormal - normal always pointing out of back face
+    //outwardNormal - normal always pointing away from back face
     void setFaceNormal(const Ray& r, const Vec3& outwardNormal)
     {
        frontFace = dot(r.direction, outwardNormal) < 0;
-       unitNormal = frontFace ? unitVector(outwardNormal) : unitVector(-outwardNormal);
+       unitNormal = (frontFace ? outwardNormal : -outwardNormal);
+       unitNormal.normalize();
     }
 };
 

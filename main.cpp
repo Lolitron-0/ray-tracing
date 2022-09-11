@@ -31,25 +31,50 @@ void onFrame()
 
 }
 
-Scene generateScene(int numObjects)
+Scene generateScene()
 {
     Scene scene;
+    auto groundMaterial = std::make_shared<Lambert>(Color(0.5, 0.5, 0.5));
+    scene.addObject(std::make_shared<Sphere>(Vec3(0,-1000,0), 1000, groundMaterial));
 
-    scene.addObject(std::make_shared<Sphere>(Vec3(0, -100.5, -1), 100,
-                                             std::make_shared<Lambert>(colors::grey)));
+    for (int a = -11; a < 11; a++) {
+        for (int b = -11; b < 11; b++) {
+            auto chooseMat = randomFloat();
+            Vec3 center(a + 0.9*randomFloat(), 0.2, b + 0.9*randomFloat());
 
-    for(int a=-numObjects/2;a<numObjects/2;a++){
-        for(int b=-numObjects/2;b<numObjects/2;b++){
-            Vec3 center(a+0.9*randomFloat(), 0.2, b+0.9*randomFloat());
+            if ((center - Vec3(4, 0.2, 0)).length() > 0.9) {
+                std::shared_ptr<Material> sphereMaterial;
 
-            scene.addObject(std::make_shared<Sphere>(center, 0.2,
-                                                     std::make_shared<Lambert>(Color::random()*Color::random())));
+                if (chooseMat < 0.8) {
+                    // diffuse
+                    auto albedo = Color::random() * Color::random();
+                    sphereMaterial = std::make_shared<Lambert>(albedo);
+                    scene.addObject(std::make_shared<Sphere>(center, 0.2, sphereMaterial));
+                } else if (chooseMat < 0.95) {
+                    // metal
+                    auto albedo = Color::random(0.5, 1);
+                    auto fuzz = randomFloat(0, 0.5);
+                    sphereMaterial = std::make_shared<Metal>(albedo, fuzz);
+                    scene.addObject(std::make_shared<Sphere>(center, 0.2, sphereMaterial));
+                } else {
+                    // glass
+                    sphereMaterial = std::make_shared<Glass>(1.5);
+                    scene.addObject(std::make_shared<Sphere>(center, 0.2, sphereMaterial));
+                }
+            }
         }
-
     }
 
-    return scene;
+    auto material1 = std::make_shared<Glass>(1.5);
+    scene.addObject(std::make_shared<Sphere>(Vec3(0, 1, 0), 1.0, material1));
 
+    auto material2 = std::make_shared<Lambert>(Color(0.4, 0.2, 0.1));
+    scene.addObject(std::make_shared<Sphere>(Vec3(-4, 1, 0), 1.0, material2));
+
+    auto material3 = std::make_shared<Metal>(Color(0.7, 0.6, 0.5), 0.0);
+    scene.addObject(std::make_shared<Sphere>(Vec3(4, 1, 0), 1.0, material3));
+
+    return scene;
 }
 
 
@@ -61,27 +86,25 @@ int main()
     //Gui values
     bool guiShowPreview = true;
     bool guiDynamicAntialiasing = true;
+    bool guiRerender = true;
     int guiTargetAntialiasing = 50;
     int guiNumThreads = 4;
+    float guiLookAt[3] = {0,0,0.1};
+    float guiLookFrom[3] = {13,2,3};
 
 
     //Global values
-    const auto aspectRatio = 16./9.;
-    const int imageWidth=1000;
+    const auto aspectRatio = 3./2.;
+    const int imageWidth=1200;
     const int imageHeight=static_cast<int>(imageWidth/aspectRatio);
 
     //Render
     GLFWwindow* window = initGui(imageWidth, imageHeight);
 
-    Camera camera(imageWidth, aspectRatio);
-    Scene scene = generateScene(0);
-    scene.addObject(std::make_shared<Sphere>(Vec3(0,-100.5,-1),100,std::make_shared<Lambert>(Color(.5,.8,.5))));
-    //scene.addObject(std::make_shared<Sphere>(Vec3(-1,0,-1),0.5,std::make_shared<Lambert>(Color::random()*Color::random())));
-    //scene.addObject(std::make_shared<Sphere>(Vec3(1,0,-1),0.5,std::make_shared<Lambert>(Color::random()*Color::random())));
-    scene.addObject(std::make_shared<Sphere>(Vec3(-0.5,0,-1),0.5,
-                                             std::make_shared<Metal>(Color::random()*Color::random(),1.0)));
-    scene.addObject(std::make_shared<Sphere>(Vec3(0.5,0,-1),0.5,
-                                             std::make_shared<Glass>(1.3)));
+    Camera camera(imageWidth, aspectRatio, 20, 0.1, (Vec3(guiLookFrom)-Vec3(guiLookAt)).length()+10);
+    camera.lookFrom(guiLookFrom);
+    camera.lookAt(guiLookAt);
+    Scene scene = generateScene();
 
     Renderer renderer;
     renderer.setAntialiasingStrength(guiTargetAntialiasing);
@@ -137,13 +160,33 @@ int main()
                     renderer.render(scene, camera);
                 });
             }
-            ImGui::Checkbox("Show preview", &guiShowPreview);
+            if(ImGui::Checkbox("Show preview", &guiShowPreview))
+                texture.regenerateTexture(camera.snapshot.getPixelData(), imageWidth, imageHeight);
             if(ImGui::Checkbox("Dynamic render", &guiDynamicAntialiasing))
                 renderer.setDynamicAntialiasing(guiDynamicAntialiasing);
             if(ImGui::SliderInt("Num threads", &guiNumThreads, 1, 20))
                 renderer.setNumThreads(guiNumThreads);
             if(ImGui::SliderInt("Target antialiasing", &guiTargetAntialiasing, 1, 5000))
                 renderer.setAntialiasingStrength(guiTargetAntialiasing);
+
+            ImGui::NewLine();
+            ImGui::Separator();
+            ImGui::NewLine();
+
+            ImGui::Checkbox("Rerender", &guiRerender);
+            if(ImGui::SliderFloat3("Look At", guiLookAt, -10, 10) ||
+                    ImGui::SliderFloat3("Look From", guiLookFrom, -10, 10)){
+                camera.lookAt(guiLookAt);
+                camera.lookFrom(guiLookFrom);
+                renderer.askInterrupt();
+                if(guiRerender){
+                    renderThread.join();
+                    renderThread = std::thread([&renderer, scene, &camera](){
+                        renderer.render(scene, camera);
+                    });
+                }
+            }
+
         ImGui::End();
 
         ImGui::Render();
@@ -170,7 +213,7 @@ int main()
         glfwSwapBuffers(window);
     }
     renderer.askInterrupt();
-    //renderThread.join();
+    renderThread.join();
 
     glfwTerminate();
 }
