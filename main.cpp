@@ -101,7 +101,7 @@ int main()
     //Render
     GLFWwindow* window = initGui(imageWidth, imageHeight);
 
-    Camera camera(imageWidth, aspectRatio, 20, 0.1, (Vec3(guiLookFrom)-Vec3(guiLookAt)).length()+10);
+    Camera camera(imageWidth, aspectRatio, 20, 0.1, (Vec3(guiLookFrom)-Vec3(guiLookAt)).length());
     camera.lookFrom(guiLookFrom);
     camera.lookAt(guiLookAt);
     Scene scene = generateScene();
