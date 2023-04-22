@@ -11,7 +11,7 @@ GLFWwindow* initGui(int w, int h)
 {
    GLFWwindow* window;
    glfwInit();
-   window = glfwCreateWindow(w, h, "Hello World", NULL, NULL);
+   window = glfwCreateWindow(w, h, "raytracer (yay)", NULL, NULL);
    glfwMakeContextCurrent(window);
    glfwSetErrorCallback([](int errCode, const char* message){
       std::cerr<<message<<std::endl;

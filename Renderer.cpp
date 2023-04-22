@@ -67,9 +67,10 @@ void Renderer::render(const Scene &scene, Camera &camera)
             mLinesRemaining--;
         }
 
-        mLinesRemaining = 0; //doing it implicitly so cancelled threads don't go below zero
+        mLinesRemaining = 0; //doing it explicitly so cancelled threads don't go below zero
         std::cout<<"Iteration done in "<<timer.elapsedMs()/1000.<<" sec!"<<std::endl;
-
+        camera.snapshot.writeToImage();
+        std::cout<<"Written to image"<<std::endl;
         if(mCurrentSamplesPerPixel>=mTargetSamplesPerPixel) break; //here it is
     }
 }
